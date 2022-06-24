@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/justinas/nosurf"
-	"github.com/mathiashandle/go-course/pkg/config"
-	"github.com/mathiashandle/go-course/pkg/models"
+	"github.com/mathiashandle/go-course/internal/config"
+	"github.com/mathiashandle/go-course/internal/models"
 )
 
 var appConfig *config.AppConfig

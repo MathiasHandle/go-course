@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/mathiashandle/go-course/pkg/config"
-	"github.com/mathiashandle/go-course/pkg/handlers"
-	"github.com/mathiashandle/go-course/pkg/render"
+	"github.com/mathiashandle/go-course/internal/config"
+	"github.com/mathiashandle/go-course/internal/handlers"
+	"github.com/mathiashandle/go-course/internal/render"
 )
 
 var appConfig config.AppConfig
