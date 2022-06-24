@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/justinas/nosurf"
 	"github.com/mathiashandle/go-course/pkg/config"
 	"github.com/mathiashandle/go-course/pkg/models"
 )
@@ -19,14 +20,21 @@ func NewTemplates(a *config.AppConfig) {
 	appConfig = a
 }
 
-func AddDefaultData(td *models.TemplateData) *models.TemplateData {
-	return td
+func AddDefaultData(templateData *models.TemplateData, req *http.Request) *models.TemplateData {
+	templateData.CSRFToken = nosurf.Token(req)
+	return templateData
 }
 
 // Renders passed in template
-func RenderTemplate(w http.ResponseWriter, tmpl string, templateData *models.TemplateData) {
-	// get the template cache from app config
-	tc := appConfig.TemplateCache
+func RenderTemplate(w http.ResponseWriter, req *http.Request, tmpl string, templateData *models.TemplateData) {
+	var tc map[string]*template.Template
+
+	if appConfig.UseCache {
+		// get the template cache from app config
+		tc = appConfig.TemplateCache
+	} else {
+		tc, _ = CreateTemplateCache()
+	}
 
 	t, ok := tc[tmpl]
 	if !ok {
@@ -34,7 +42,8 @@ func RenderTemplate(w http.ResponseWriter, tmpl string, templateData *models.Tem
 	}
 
 	buf := new(bytes.Buffer)
-	templateData = AddDefaultData(templateData)
+
+	templateData = AddDefaultData(templateData, req)
 	_ = t.Execute(buf, templateData)
 
 	_, err := buf.WriteTo(w)

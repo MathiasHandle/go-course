@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/mathiashandle/go-course/pkg/config"
@@ -29,7 +32,7 @@ func (rep *Repository) Home(w http.ResponseWriter, req *http.Request) {
 	remoteIp := req.RemoteAddr
 	rep.App.Session.Put(req.Context(), "remote_ip", remoteIp)
 
-	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "home.page.tmpl", &models.TemplateData{})
 }
 
 // About page handler
@@ -40,32 +43,61 @@ func (rep *Repository) About(w http.ResponseWriter, req *http.Request) {
 	remoteIp := rep.App.Session.GetString(req.Context(), "remote_ip")
 	stringMap["remote_ip"] = remoteIp
 
-	render.RenderTemplate(w, "about.page.tmpl", &models.TemplateData{
+	render.RenderTemplate(w, req, "about.page.tmpl", &models.TemplateData{
 		StringMap: stringMap,
 	})
 }
 
 // Reservation renders the make a reservation page and displays form
-func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "make-reservation.page.tmpl", &models.TemplateData{})
+func (m *Repository) Reservation(w http.ResponseWriter, req *http.Request) {
+	render.RenderTemplate(w, req, "make-reservation.page.tmpl", &models.TemplateData{})
 }
 
 // Generals renders the room page
-func (m *Repository) Generals(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "generals.page.tmpl", &models.TemplateData{})
+func (m *Repository) Generals(w http.ResponseWriter, req *http.Request) {
+	render.RenderTemplate(w, req, "generals.page.tmpl", &models.TemplateData{})
 }
 
 // Majors renders the room page
-func (m *Repository) Majors(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "majors.page.tmpl", &models.TemplateData{})
+func (m *Repository) Majors(w http.ResponseWriter, req *http.Request) {
+	render.RenderTemplate(w, req, "majors.page.tmpl", &models.TemplateData{})
 }
 
 // Availability renders the search availability page
-func (m *Repository) Availability(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "search-availability.page.tmpl", &models.TemplateData{})
+func (m *Repository) Availability(w http.ResponseWriter, req *http.Request) {
+	render.RenderTemplate(w, req, "search-availability.page.tmpl", &models.TemplateData{})
+}
+
+// PostAvailability renders the search availability page
+func (m *Repository) PostAvailability(w http.ResponseWriter, req *http.Request) {
+	start := req.Form.Get("start")
+	end := req.Form.Get("end")
+
+	w.Write([]byte(fmt.Sprintf("Startdate %s Enddate %s", start, end)))
+}
+
+type jsonResponse struct {
+	Ok      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// AvailabilityJSON renders the search availability page
+func (m *Repository) AvailabilityJSON(w http.ResponseWriter, req *http.Request) {
+	res := jsonResponse{
+		Ok:      true,
+		Message: "Available",
+	}
+
+	out, err := json.MarshalIndent(res, "", "     ")
+	if err != nil {
+		log.Println(err)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 // Contact renders the contact page
-func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, "contact.page.tmpl", &models.TemplateData{})
+func (m *Repository) Contact(w http.ResponseWriter, req *http.Request) {
+	render.RenderTemplate(w, req, "contact.page.tmpl", &models.TemplateData{})
 }
