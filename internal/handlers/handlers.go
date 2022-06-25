@@ -80,6 +80,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, req *http.Request) {
 
 	form.Required("first_name", "last_name", "email")
 	form.MinLength("first_name", 5, req)
+	form.IsEmail("email", req)
 
 	if !form.IsValid() {
 		data := make(map[string]interface{})
@@ -91,6 +92,31 @@ func (m *Repository) PostReservation(w http.ResponseWriter, req *http.Request) {
 		})
 		return
 	}
+
+	// Saving data to session before redirect
+	m.App.Session.Put(req.Context(), "reservation", reservation)
+	// Redirecting user
+	http.Redirect(w, req, "/reservation-summary", http.StatusSeeOther)
+}
+
+func (m *Repository) ReservationSummary(w http.ResponseWriter, req *http.Request) {
+	reservation, ok := m.App.Session.Get(req.Context(), "reservation").(models.Reservation)
+	if !ok {
+		log.Println("Cannot get item from session")
+		m.App.Session.Put(req.Context(), "error", "Can't get reservation from session")
+		http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	//clearing session set in PostReservation
+	m.App.Session.Remove(req.Context(), "reservation")
+
+	data := make(map[string]interface{})
+	data["reservation"] = reservation
+
+	render.RenderTemplate(w, req, "reservation-summary.page.gohtml", &models.TemplateData{
+		Data: data,
+	})
 }
 
 // Generals renders the room page

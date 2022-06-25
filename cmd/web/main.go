@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/gob"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/mathiashandle/go-course/internal/config"
 	"github.com/mathiashandle/go-course/internal/handlers"
+	"github.com/mathiashandle/go-course/internal/models"
 	"github.com/mathiashandle/go-course/internal/render"
 )
 
@@ -18,6 +20,8 @@ var session *scs.SessionManager
 const port = "127.0.0.1:3001"
 
 func main() {
+	gob.Register(models.Reservation{})
+
 	appConfig.InProduction = false
 
 	// Setting up session
