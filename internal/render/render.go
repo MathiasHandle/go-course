@@ -2,9 +2,9 @@ package render
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"path/filepath"
 
@@ -31,7 +31,7 @@ func AddDefaultData(templateData *models.TemplateData, req *http.Request) *model
 }
 
 // Renders passed in template
-func RenderTemplate(w http.ResponseWriter, req *http.Request, tmpl string, templateData *models.TemplateData) {
+func RenderTemplate(w http.ResponseWriter, req *http.Request, tmpl string, templateData *models.TemplateData) error {
 	var tc map[string]*template.Template
 
 	if appConfig.UseCache {
@@ -43,7 +43,7 @@ func RenderTemplate(w http.ResponseWriter, req *http.Request, tmpl string, templ
 
 	t, ok := tc[tmpl]
 	if !ok {
-		log.Fatal("Couldnt get template from template cache")
+		return errors.New("couldnt get template from template cache")
 	}
 
 	buf := new(bytes.Buffer)
@@ -54,7 +54,10 @@ func RenderTemplate(w http.ResponseWriter, req *http.Request, tmpl string, templ
 	_, err := buf.WriteTo(w)
 	if err != nil {
 		fmt.Println("Error writing template to browser", err)
+		return err
 	}
+
+	return nil
 }
 
 var functions = template.FuncMap{}
@@ -64,7 +67,7 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 	// create empty template cache
 	templateCache := map[string]*template.Template{}
 
-	// get all templates
+	// get all page templates
 	pages, err := filepath.Glob(fmt.Sprintf("%s/*.page.gohtml", pathtoTemplates))
 	if err != nil {
 		return templateCache, err
