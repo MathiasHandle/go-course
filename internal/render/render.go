@@ -14,6 +14,7 @@ import (
 )
 
 var appConfig *config.AppConfig
+var pathtoTemplates = "../../templates"
 
 // NewTemplates sets the config for the template package
 func NewTemplates(a *config.AppConfig) {
@@ -64,7 +65,7 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 	templateCache := map[string]*template.Template{}
 
 	// get all templates
-	pages, err := filepath.Glob("../../templates/*.page.gohtml")
+	pages, err := filepath.Glob(fmt.Sprintf("%s/*.page.gohtml", pathtoTemplates))
 	if err != nil {
 		return templateCache, err
 	}
@@ -78,13 +79,13 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 			return templateCache, err
 		}
 
-		matches, err := filepath.Glob("../../templates/*.layout.gohtml")
+		matches, err := filepath.Glob(fmt.Sprintf("%s/*.layout.gohtml", pathtoTemplates))
 		if err != nil {
 			return templateCache, err
 		}
 
 		if len(matches) > 0 {
-			templateSet, err = templateSet.ParseGlob("../../templates/*.layout.gohtml")
+			templateSet, err = templateSet.ParseGlob(fmt.Sprintf("%s/*.layout.gohtml", pathtoTemplates))
 			if err != nil {
 				return templateCache, err
 			}
