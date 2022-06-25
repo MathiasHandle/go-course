@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/mathiashandle/go-course/internal/config"
+	"github.com/mathiashandle/go-course/internal/forms"
 	"github.com/mathiashandle/go-course/internal/models"
 	"github.com/mathiashandle/go-course/internal/render"
 )
@@ -32,7 +33,7 @@ func (rep *Repository) Home(w http.ResponseWriter, req *http.Request) {
 	remoteIp := req.RemoteAddr
 	rep.App.Session.Put(req.Context(), "remote_ip", remoteIp)
 
-	render.RenderTemplate(w, req, "home.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "home.page.gohtml", &models.TemplateData{})
 }
 
 // About page handler
@@ -43,29 +44,68 @@ func (rep *Repository) About(w http.ResponseWriter, req *http.Request) {
 	remoteIp := rep.App.Session.GetString(req.Context(), "remote_ip")
 	stringMap["remote_ip"] = remoteIp
 
-	render.RenderTemplate(w, req, "about.page.tmpl", &models.TemplateData{
+	render.RenderTemplate(w, req, "about.page.gohtml", &models.TemplateData{
 		StringMap: stringMap,
 	})
 }
 
 // Reservation renders the make a reservation page and displays form
 func (m *Repository) Reservation(w http.ResponseWriter, req *http.Request) {
-	render.RenderTemplate(w, req, "make-reservation.page.tmpl", &models.TemplateData{})
+	var emptyReservation models.Reservation
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation
+
+	render.RenderTemplate(w, req, "make-reservation.page.gohtml", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: data,
+	})
+}
+
+// PostReservation handles the posting of reservation form
+func (m *Repository) PostReservation(w http.ResponseWriter, req *http.Request) {
+	err := req.ParseForm()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	reservation := models.Reservation{
+		FirstName: req.Form.Get("first_name"),
+		LastName:  req.Form.Get("last_name"),
+		Email:     req.Form.Get("email"),
+		Phone:     req.Form.Get("phone"),
+	}
+
+	form := forms.New(req.PostForm)
+
+	form.Required("first_name", "last_name", "email")
+	form.MinLength("first_name", 5, req)
+
+	if !form.IsValid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+
+		render.RenderTemplate(w, req, "make-reservation.page.gohtml", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
 }
 
 // Generals renders the room page
 func (m *Repository) Generals(w http.ResponseWriter, req *http.Request) {
-	render.RenderTemplate(w, req, "generals.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "generals.page.gohtml", &models.TemplateData{})
 }
 
 // Majors renders the room page
 func (m *Repository) Majors(w http.ResponseWriter, req *http.Request) {
-	render.RenderTemplate(w, req, "majors.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "majors.page.gohtml", &models.TemplateData{})
 }
 
 // Availability renders the search availability page
 func (m *Repository) Availability(w http.ResponseWriter, req *http.Request) {
-	render.RenderTemplate(w, req, "search-availability.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "search-availability.page.gohtml", &models.TemplateData{})
 }
 
 // PostAvailability renders the search availability page
@@ -73,7 +113,7 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, req *http.Request) 
 	start := req.Form.Get("start")
 	end := req.Form.Get("end")
 
-	w.Write([]byte(fmt.Sprintf("Startdate %s Enddate %s", start, end)))
+	w.Write([]byte(fmt.Sprintf("StartDate %s EndDate %s", start, end)))
 }
 
 type jsonResponse struct {
@@ -99,5 +139,5 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, req *http.Request) 
 
 // Contact renders the contact page
 func (m *Repository) Contact(w http.ResponseWriter, req *http.Request) {
-	render.RenderTemplate(w, req, "contact.page.tmpl", &models.TemplateData{})
+	render.RenderTemplate(w, req, "contact.page.gohtml", &models.TemplateData{})
 }
