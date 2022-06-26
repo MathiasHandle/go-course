@@ -5,17 +5,21 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/mathiashandle/go-course/internal/config"
 	"github.com/mathiashandle/go-course/internal/handlers"
+	"github.com/mathiashandle/go-course/internal/helpers"
 	"github.com/mathiashandle/go-course/internal/models"
 	"github.com/mathiashandle/go-course/internal/render"
 )
 
 var appConfig config.AppConfig
 var session *scs.SessionManager
+var infoLog *log.Logger
+var errorLog *log.Logger
 
 const port = "127.0.0.1:3001"
 
@@ -41,6 +45,12 @@ func run() error {
 
 	appConfig.InProduction = false
 
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	appConfig.InfoLog = infoLog
+
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	appConfig.ErrorLog = errorLog
+
 	// Setting up session
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
@@ -61,6 +71,7 @@ func run() error {
 	repo := handlers.NewRepo(&appConfig)
 	handlers.Newhandlers(repo)
 	render.NewTemplates(&appConfig)
+	helpers.NewHelpers(&appConfig)
 
 	return nil
 }
