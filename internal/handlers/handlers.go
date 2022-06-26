@@ -3,11 +3,11 @@ package handlers
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/mathiashandle/go-course/internal/config"
 	"github.com/mathiashandle/go-course/internal/forms"
+	"github.com/mathiashandle/go-course/internal/helpers"
 	"github.com/mathiashandle/go-course/internal/models"
 	"github.com/mathiashandle/go-course/internal/render"
 )
@@ -30,23 +30,12 @@ func Newhandlers(repo *Repository) {
 
 // Home page handler
 func (rep *Repository) Home(w http.ResponseWriter, req *http.Request) {
-	remoteIp := req.RemoteAddr
-	rep.App.Session.Put(req.Context(), "remote_ip", remoteIp)
-
 	render.RenderTemplate(w, req, "home.page.gohtml", &models.TemplateData{})
 }
 
 // About page handler
 func (rep *Repository) About(w http.ResponseWriter, req *http.Request) {
-	stringMap := make(map[string]string)
-	stringMap["test"] = "Hello again"
-
-	remoteIp := rep.App.Session.GetString(req.Context(), "remote_ip")
-	stringMap["remote_ip"] = remoteIp
-
-	render.RenderTemplate(w, req, "about.page.gohtml", &models.TemplateData{
-		StringMap: stringMap,
-	})
+	render.RenderTemplate(w, req, "about.page.gohtml", &models.TemplateData{})
 }
 
 // Reservation renders the make a reservation page and displays form
@@ -65,7 +54,7 @@ func (m *Repository) Reservation(w http.ResponseWriter, req *http.Request) {
 func (m *Repository) PostReservation(w http.ResponseWriter, req *http.Request) {
 	err := req.ParseForm()
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
 		return
 	}
 
@@ -102,7 +91,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, req *http.Request) {
 func (m *Repository) ReservationSummary(w http.ResponseWriter, req *http.Request) {
 	reservation, ok := m.App.Session.Get(req.Context(), "reservation").(models.Reservation)
 	if !ok {
-		log.Println("Cannot get item from session")
+		m.App.ErrorLog.Println("Can't get item from session")
 		m.App.Session.Put(req.Context(), "error", "Can't get reservation from session")
 		http.Redirect(w, req, "/", http.StatusTemporaryRedirect)
 		return
@@ -156,7 +145,8 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, req *http.Request) 
 
 	out, err := json.MarshalIndent(res, "", "     ")
 	if err != nil {
-		log.Println(err)
+		helpers.ServerError(w, err)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
